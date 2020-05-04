@@ -20,31 +20,59 @@ public class PlayerController : MonoBehaviour
     private float jumpForce;
 
     private Rigidbody2D playerRigibody;
-    private bool isJumping;
     private bool isFacingRight = true;
+    private bool isOnGround = true;
+    new private Collider2D collider;
+    private RaycastHit2D[] hits = new RaycastHit2D[16];
+    private float groundDistantceCheck = 0.05f;
+    private Animator animator;
+    private float horizontalInput = 0;
+    private bool isJumpPressed = false;
 
     void Start()
     {
         playerRigibody = GetComponent<Rigidbody2D>();
+        collider = GetComponent<Collider2D>();
+        animator = GetComponent<Animator>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        float horizontalInput = Input.GetAxis("Horizontal");
-        float xVelocity = horizontalInput * speed;
-        playerRigibody.velocity = new Vector2(xVelocity, playerRigibody.velocity.y);
-
-        if((isFacingRight && horizontalInput < 0) ||
-            (!isFacingRight && horizontalInput > 0))
-        {
-            Flip();
-        }
+        horizontalInput += Input.GetAxis("Horizontal");
+        isJumpPressed = isJumpPressed || Input.GetButtonDown("Jump");
+     
     }
 
     void FixedUpdate()
     {
+        float xVelocity = horizontalInput * speed;
+        playerRigibody.velocity = new Vector2(xVelocity, playerRigibody.velocity.y);
 
+        if ((isFacingRight && horizontalInput < 0) ||
+            (!isFacingRight && horizontalInput > 0))
+        {
+            Flip();
+        }
+
+        int numHits = collider.Cast(Vector2.down, hits, groundDistantceCheck);
+        isOnGround = numHits > 0;
+
+        Vector2 rayStart = new Vector2(collider.bounds.center.x, collider.bounds.min.y);
+        Vector2 rayDirection = Vector2.down;
+        Debug.DrawRay(rayStart, rayDirection, Color.red, 1f);
+
+
+        if (isJumpPressed && isOnGround)
+        {
+            playerRigibody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+        }
+
+        animator.SetFloat("xSpeed", Mathf.Abs(playerRigibody.velocity.x));
+        animator.SetFloat("yVelocity", playerRigibody.velocity.y);
+        animator.SetBool("isOnGround", isOnGround);
+
+        ClearInput();
     }
 
     private void Flip()
@@ -53,5 +81,11 @@ public class PlayerController : MonoBehaviour
         Vector3 scale = transform.localScale;
         scale.x = isFacingRight ? 10 : -10;
         transform.localScale = scale;
+    }
+
+    private void ClearInput()
+    {
+        horizontalInput = 0;
+        isJumpPressed = false;
     }
 }
