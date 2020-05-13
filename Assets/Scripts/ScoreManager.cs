@@ -15,4 +15,5 @@ public class ScoreManager : MonoBehaviour
     {
         score += increment;
     }
+
 }

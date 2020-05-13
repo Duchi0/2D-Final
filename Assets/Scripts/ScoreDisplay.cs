@@ -17,4 +17,5 @@ public class ScoreDisplay : MonoBehaviour
     {
         scoreText.text = $"Score: {scoreManager.score}";
     }
+
 }
